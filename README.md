@@ -5,6 +5,8 @@
 
 ### Description
 
+A modified fork that is pointer locked
+
 noVNC is both a HTML VNC client JavaScript library and an application built on
 top of that library. noVNC runs well in any modern browser including mobile
 browsers (iOS and Android).
