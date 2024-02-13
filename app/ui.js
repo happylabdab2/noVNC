@@ -232,6 +232,11 @@ const UI = {
         document.getElementById("noVNC_view_drag_button")
             .addEventListener('click', UI.toggleViewDrag);
 
+            //pointerlock
+            document
+            .getElementById("noVNC_pointer_lock_button")
+            .addEventListener("click", UI.requestPointerLock);
+
         document.getElementById("noVNC_control_bar_handle")
             .addEventListener('mousedown', UI.controlbarHandleMouseDown);
         document.getElementById("noVNC_control_bar_handle")
@@ -451,6 +456,9 @@ const UI = {
             UI.updatePowerButton();
             UI.keepControlbar();
         }
+
+        UI.updatePointerLockButton();
+
 
         // State change closes dialogs as they may not be relevant
         // anymore
@@ -1063,6 +1071,7 @@ const UI = {
         UI.rfb.addEventListener("clipboard", UI.clipboardReceive);
         UI.rfb.addEventListener("bell", UI.bell);
         UI.rfb.addEventListener("desktopname", UI.updateDesktopName);
+        UI.rfb.addEventListener("inputlock", UI.inputLockChanged);
         UI.rfb.clipViewport = UI.getSetting('view_clip');
         UI.rfb.scaleViewport = UI.getSetting('resize') === 'scale';
         UI.rfb.resizeSession = UI.getSetting('resize') === 'remote';
@@ -1305,6 +1314,8 @@ const UI = {
             document.getElementById('noVNC_fullscreen_button')
                 .classList.remove("noVNC_selected");
         }
+        //update
+        UI.updatePointerLockButton();
     },
 
 /* ------^-------
@@ -1369,7 +1380,39 @@ const UI = {
 /* ------^-------
  * /VIEW CLIPPING
  * ==============
- *    VIEWDRAG
+*  POINTER LOCK
+ * ------v------*/
+
+updatePointerLockButton() {
+    // Only show the button if the pointer lock API is properly supported
+    // AND in fullscreen.
+    if (
+        UI.connected &&
+        (document.fullscreenElement || // alternative standard method
+         document.mozFullScreenElement || // currently working methods
+         document.webkitFullscreenElement ||
+         document.msFullscreenElement) &&
+        (document.pointerLockElement !== undefined ||
+            document.mozPointerLockElement !== undefined)
+    ) {
+        document
+            .getElementById("noVNC_pointer_lock_button")
+            .classList.remove("noVNC_hidden");
+    } else {
+        document
+            .getElementById("noVNC_pointer_lock_button")
+            .classList.add("noVNC_hidden");
+    }
+},
+
+requestPointerLock() {
+    UI.rfb.requestInputLock({ pointer: true });
+},
+
+/* ------^-------
+* /POINTER LOCK
+* ==============
+*    VIEWDRAG
  * ------v------*/
 
     toggleViewDrag() {
@@ -1736,6 +1779,19 @@ const UI = {
         // Display the desktop name in the document title
         document.title = e.detail.name + " - " + PAGE_TITLE;
     },
+
+    inputLockChanged(e) {
+        if (e.detail.pointer) {
+            document
+                .getElementById("noVNC_pointer_lock_button")
+                .classList.add("noVNC_selected");
+        } else {
+            document
+                .getElementById("noVNC_pointer_lock_button")
+                .classList.remove("noVNC_selected");
+        }
+    },
+
 
     bell(e) {
         if (WebUtil.getConfigVar('bell', 'on') === 'on') {
